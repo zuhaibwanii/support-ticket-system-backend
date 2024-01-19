@@ -1,0 +1,27 @@
+{
+  "name": "support-ticket-entry-system-backend",
+  "version": "1.0.0",
+  "description": "Backend for support ticket entry system app",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon -r dotenv/config --experimental-json-modules src/index.js",
+    "dev": "nodemon -r dotenv/config --experimental-json-modules src/index.js"
+  },
+  "keywords": [
+    "javascript",
+    "backend"
+  ],
+  "author": "Zuhaib wani",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.3"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^8.0.0"
+  }
+}
