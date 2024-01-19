@@ -7,15 +7,6 @@ import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import isEmpty from "../utils/isEmpty.js";
 
-// topic: 
-// description:
-// severity:
-// type:
-// assignedTo: 
-// status: 
-// resolvedOn: 
-// dateCreated: 
-
 const createTicket = async (req, res) => {
     try {
         let { topic, description, severity, type } = req.body;
@@ -41,10 +32,6 @@ const createTicket = async (req, res) => {
 
         assignedTo = agentWithMinTickets._id;
 
-
-        //1 =  "_id": "65aa6b9df25ebc444633f657",
-        //2 = "_id": "65aa6bc0f25ebc444633f65b",
-
         const status = assignedTo ? 'Assigned' : 'New';
         const newTicket = await Ticket.create({
             topic,
@@ -66,8 +53,32 @@ const createTicket = async (req, res) => {
 const getTickets = async (req, res) => {
     try {
         const { startIndex = 0, limit = 10 } = req.query;
-        console.log('req.query = ', req.query);
-        let tickets = await Ticket.find().sort({ createdAt: -1 }).skip(startIndex).limit(limit);
+        let tickets = await Ticket.aggregate([
+            { $sort: { createdAt: -1 } },
+            { $skip: parseInt(startIndex) },
+            { $limit: parseInt(limit) },
+            {
+                $lookup: {
+                    from: 'agents',
+                    localField: 'assignedTo',
+                    foreignField: '_id',
+                    as: 'agentDetails'
+                }
+            },
+            {
+                $unwind: '$agentDetails'
+            },
+            {
+                $set: {
+                    'assignedTo.name': '$agentDetails.name'
+                }
+            },
+            {
+                $project: {
+                    agentDetails: 0
+                }
+            }
+        ]);
         let totalCount = await Ticket.countDocuments();
         let pagination = {
             limit: parseInt(limit),
@@ -78,6 +89,7 @@ const getTickets = async (req, res) => {
         return res.status(200).json(new ApiResponse(200, { data: tickets, pagination }, "Success"));
 
     } catch (error) {
+        console.log('error = ', error);
         return res.status(500).json(new ApiError(500, "Internal server error", error?.errors || error));
     }
 }

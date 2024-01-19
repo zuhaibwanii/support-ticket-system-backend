@@ -37,8 +37,32 @@ const createAgent = async (req, res) => {
 const getAgents = async (req, res) => {
     try {
         const { startIndex = 0, limit = 10 } = req.query;
-        console.log('req.query = ', req.query);
-        let agents = await Agent.find().sort({ createdAt: -1 }).skip(startIndex).limit(limit);
+        // console.log('req.query = ', req.query);
+        let agents = await Agent.aggregate([
+            { $sort: { createdAt: -1 } },
+            { $skip: parseInt(startIndex) },
+            { $limit: parseInt(limit) },
+            {
+                $lookup: {
+                    from: 'tickets',
+                    localField: '_id',
+                    foreignField: 'assignedTo',
+                    as: 'assignedTickets'
+                }
+            },
+            {
+                $addFields: {
+                    assignedTicketsCount: { $size: '$assignedTickets' } 
+                }
+            },
+            {
+                $project: {
+                    assignedTickets: 0 
+                }
+            }
+
+        ])
+       
         let totalCount = await Agent.countDocuments();
         let pagination = {
             limit: parseInt(limit),
