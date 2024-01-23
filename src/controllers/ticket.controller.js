@@ -66,11 +66,9 @@ const getTickets = async (req, res) => {
                 }
             },
             {
-                $unwind: '$agentDetails'
-            },
-            {
-                $set: {
-                    'assignedTo.name': '$agentDetails.name'
+                $addFields:{
+                    "assignedTo._id":{$first:"$agentDetails._id"},
+                    "assignedTo.name":{$first:"$agentDetails.name"},
                 }
             },
             {
